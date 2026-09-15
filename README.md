@@ -1,3 +1,4 @@
+
 # Pokémon Ruby and Sapphire [![Build Status][travis-badge]][travis]
 
 This is a disassembly of Pokémon Ruby and Sapphire.
@@ -13,3 +14,9 @@ For contacts and other pret projects, see [pret.github.io](https://pret.github.i
 
 [travis]: https://travis-ci.org/pret/pokeruby
 [travis-badge]: https://travis-ci.org/pret/pokeruby.svg?branch=master
+
+## AI Assistance
+
+Modifications to this decompilation project were implemented with assistance from Anthropic Claude. I specified the desired changes, directed and approved the implementation, and performed live testing and debugging. Claude analyzed the existing project files and generated the code changes under my direction.
+
+The original decompilation work belongs to its respective contributors; these modifications do not claim authorship of the underlying project.
