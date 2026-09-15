@@ -21,6 +21,7 @@ For pret projects, see [pret.github.io](https://pret.github.io/).
 
 - Emerald Cable Club Design and Scripts
 - Trading and Battling with FireRed, LeafGreen, and Emerald over Wireless Adapter
+- FrLg/E Wireless Glyph
 
 ---
 
