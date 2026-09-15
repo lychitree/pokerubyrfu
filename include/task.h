@@ -3,6 +3,10 @@
 
 #define NUM_TASKS 16
 
+// Matches src/task.c's TAIL_SENTINEL -- the value an invalid/absent task ID is
+// set to. Emerald exposes this as TASK_NONE in the public header.
+#define TASK_NONE 0xFF
+
 // general task defines
 #define TASK gTasks[taskId]
 #define FUNC func

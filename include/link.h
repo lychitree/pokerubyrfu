@@ -2,6 +2,7 @@
 #define GUARD_LINK_H
 
 #define MAX_LINK_PLAYERS 4
+#define MAX_RFU_PLAYERS 5
 #define CMD_LENGTH 8
 #define QUEUE_CAPACITY 50
 #define BLOCK_BUFFER_SIZE 0x100
@@ -60,6 +61,39 @@ enum
     LAG_SLAVE,
 };
 
+// gLinkType wire values. pokeruby already used these as raw hex (e.g.
+// gLinkType = 0x1111 in src/link.c) without naming them; named here to match
+// Emerald since the RFU connection layer needs the full set.
+#define LINKTYPE_TRADE                 0x1111
+#define LINKTYPE_TRADE_CONNECTING      0x1122
+#define LINKTYPE_TRADE_SETUP           0x1133
+#define LINKTYPE_TRADE_DISCONNECTED    0x1144
+#define LINKTYPE_BATTLE                0x2211
+#define LINKTYPE_UNUSED_BATTLE         0x2222 // Unused, inferred from gap
+#define LINKTYPE_SINGLE_BATTLE         0x2233
+#define LINKTYPE_DOUBLE_BATTLE         0x2244
+#define LINKTYPE_MULTI_BATTLE          0x2255
+#define LINKTYPE_BATTLE_TOWER_50       0x2266
+#define LINKTYPE_BATTLE_TOWER_OPEN     0x2277
+#define LINKTYPE_BATTLE_TOWER          0x2288
+#define LINKTYPE_RECORD_MIX_BEFORE     0x3311
+#define LINKTYPE_RECORD_MIX_AFTER      0x3322
+#define LINKTYPE_BERRY_BLENDER_SETUP   0x4411
+#define LINKTYPE_BERRY_BLENDER         0x4422
+#define LINKTYPE_MYSTERY_EVENT         0x5501
+#define LINKTYPE_EREADER_FRLG          0x5502
+#define LINKTYPE_EREADER_EM            0x5503
+#define LINKTYPE_CONTEST_GMODE         0x6601
+#define LINKTYPE_CONTEST_EMODE         0x6602
+
+enum {
+    BLOCK_REQ_SIZE_NONE, // Identical to 200
+    BLOCK_REQ_SIZE_200,
+    BLOCK_REQ_SIZE_100,
+    BLOCK_REQ_SIZE_220,
+    BLOCK_REQ_SIZE_40,
+};
+
 struct LinkPlayer
 {
     /* 0x00 */ u16 version;
@@ -76,6 +110,38 @@ struct LinkPlayerBlock
 {
     u8 magic1[16];
     struct LinkPlayer linkPlayer;
+    u8 magic2[16];
+};
+
+// Wire-format mirror of Emerald's struct LinkPlayer/LinkPlayerBlock, used only
+// by the RFU serialization functions (LocalLinkPlayerToBlock/LinkPlayerFromBlock).
+// pokeruby's own struct LinkPlayer stores an 11-byte name at this same offset
+// range (0x08-0x12) with no room for progressFlags/neverRead/progressFlagsCopy;
+// Emerald instead stores an 8-byte name (OT_NAME_LENGTH+1) followed by those
+// three flag bytes, still totaling 11 bytes before gender at 0x13 -- same
+// struct size, different meaning. A real Emerald peer expects the latter, so
+// blocks sent/received over RFU are translated field-by-field rather than
+// memcpy'd, instead of changing pokeruby's own struct LinkPlayer (which would
+// touch every existing wired-link trade/battle call site that reads .name).
+struct RfuLinkPlayer
+{
+    /* 0x00 */ u16 version;
+    /* 0x02 */ u16 lp_field_2;
+    /* 0x04 */ u32 trainerId;
+    /* 0x08 */ u8 name[OT_NAME_LENGTH + 1];
+    /* 0x10 */ u8 progressFlags; // (& 0x0F) hasNationalDex, (& 0xF0) hasClearedGame -- not populated yet
+    /* 0x11 */ u8 neverRead;
+    /* 0x12 */ u8 progressFlagsCopy;
+    /* 0x13 */ u8 gender;
+    /* 0x14 */ u32 linkType;
+    /* 0x18 */ u16 id;
+    /* 0x1A */ u16 language;
+};
+
+struct RfuLinkPlayerBlock
+{
+    u8 magic1[16];
+    struct RfuLinkPlayer linkPlayer;
     u8 magic2[16];
 };
 
@@ -130,11 +196,14 @@ struct BlockRequest {
 extern const struct BlockRequest sBlockRequestLookupTable[5];
 
 extern struct Link gLink;
-extern u16 gRecvCmds[CMD_LENGTH][MAX_LINK_PLAYERS];
+extern u16 gRecvCmds[CMD_LENGTH][MAX_RFU_PLAYERS];
 // TODO: Why is gBlockSendBuffer a u8 array, while gBlockRecvBuffer is a u16 array?
 extern u8 gBlockSendBuffer[BLOCK_BUFFER_SIZE];
-extern u16 gBlockRecvBuffer[MAX_LINK_PLAYERS][BLOCK_BUFFER_SIZE / 2];
+extern u16 gBlockRecvBuffer[MAX_RFU_PLAYERS][BLOCK_BUFFER_SIZE / 2];
 extern u16 gLinkType;
+extern bool8 gWirelessCommType;
+extern u16 gLinkPartnersHeldKeys[6];
+extern u32 gBerryBlenderKeySendAttempts;
 extern u32 gLinkStatus;
 extern u16 gSendCmd[CMD_LENGTH];
 extern u8 gShouldAdvanceLinkState;
@@ -142,7 +211,7 @@ extern u8 gShouldAdvanceLinkState;
 extern u8 deUnkValue1;
 extern u8 deUnkValue2;
 #endif
-extern struct LinkPlayer gLinkPlayers[];
+extern struct LinkPlayer gLinkPlayers[MAX_RFU_PLAYERS];
 extern u16 word_3002910[];
 extern bool8 gReceivedRemoteLinkPlayers;
 extern bool8 gLinkOpen;
@@ -154,6 +223,14 @@ void Task_DestroySelf(u8);
 void sub_8007270(u8);
 void OpenLink(void);
 void CloseLink(void);
+void LocalLinkPlayerToBlock(void);
+void LinkPlayerFromBlock(u32 who);
+void ConvertLinkPlayerName(struct LinkPlayer *player);
+void SetWirelessCommType1(void);
+void SetWirelessCommType0(void);
+void ClearSavedLinkPlayers(void);
+void SetLinkErrorBuffer(u32 status, u8 lastSendQueueCount, u8 lastRecvQueueCount, bool8 disconnected);
+bool8 IsWirelessAdapterConnected(void);
 u16 LinkMain2(u16 *);
 void sub_8007B14(void);
 bool32 sub_8007B24(void);
@@ -194,7 +271,7 @@ bool8 IsLinkConnectionEstablished(void);
 void SetSuppressLinkErrorMessage(bool8);
 bool8 HasLinkErrorOccurred(void);
 void ResetSerial(void);
-u32 LinkMain1(u8 *, u16 *, u16[CMD_LENGTH][MAX_LINK_PLAYERS]);
+u32 LinkMain1(u8 *, u16 *, u16[CMD_LENGTH][MAX_RFU_PLAYERS]);
 void LinkVSync(void);
 void Timer3Intr(void);
 void SerialCB(void);

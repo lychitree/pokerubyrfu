@@ -755,6 +755,12 @@ struct SaveBlock1 /* 0x02025734 */
 
 extern struct SaveBlock1 gSaveBlock1;
 
+// pokeruby keeps the save blocks as plain globals; pokeemerald (and code ported
+// from it) accesses them through relocatable pointers instead. Rather than
+// rewrite every `gSaveBlockNPtr->field` in ported Emerald code, these let it
+// compile unchanged.
+#define gSaveBlock1Ptr (&gSaveBlock1)
+
 struct Time
 {
     /*0x00*/ s16 days;
@@ -880,5 +886,6 @@ struct UnkStruct_8054FF8
 };
 
 extern struct SaveBlock2 gSaveBlock2;
+#define gSaveBlock2Ptr (&gSaveBlock2)
 
 #endif // GUARD_GLOBAL_H

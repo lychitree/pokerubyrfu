@@ -6,6 +6,10 @@
 . += 0x2E8;
 
 . = ALIGN(4); src/link.o(ewram_data);
+. = ALIGN(4); src/link_rfu.o(ewram_data);
+. = ALIGN(4); src/link_rfu_2.o(ewram_data);
+. = ALIGN(4); src/link_rfu_3.o(ewram_data);
+. = ALIGN(4); src/malloc.o(ewram_data);
 . = ALIGN(4); src/battle_controllers.o(ewram_data);
 
 /* battle */

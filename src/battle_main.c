@@ -126,7 +126,7 @@ extern u16 gBattleTypeFlags;
 extern u8 gReservedSpritePaletteCount;
 extern u16 gTrainerBattleOpponent;
 extern struct BattleEnigmaBerry gEnigmaBerries[];
-extern u16 gBlockRecvBuffer[MAX_LINK_PLAYERS][BLOCK_BUFFER_SIZE / 2];
+extern u16 gBlockRecvBuffer[MAX_RFU_PLAYERS][BLOCK_BUFFER_SIZE / 2];
 extern u8 gBattleMonForms[];
 extern u8 gBattlerAttacker;
 extern u8 gBattlerTarget;

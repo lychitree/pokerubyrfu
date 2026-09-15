@@ -30,6 +30,7 @@ SECTIONS {
         INCLUDE "sym_common.ld"
         *libc.a:sbrkr.o(COMMON);
         *(COMMON);
+        *(common_data);
         end = .;
         . = 0x8000;
     }
@@ -45,6 +46,12 @@ SECTIONS {
         src/text.o(.text);
         src/string_util.o(.text);
         src/link.o(.text);
+        src/link_rfu.o(.text);
+        src/link_rfu_connect.o(.text);
+        src/link_rfu_2.o(.text);
+        src/link_rfu_3.o(.text);
+        src/AgbRfu_LinkManager.o(.text);
+        src/malloc.o(.text);
         src/rtc.o(.text);
         src/main_menu.o(.text);
         src/battle_controllers.o(.text);
@@ -403,6 +410,10 @@ SECTIONS {
         src/libs/agb_flash_mx.o(.text);
         src/libs/siirtc.o(.text);
         src/libs/libagbsyscall.o(.text);
+        src/libs/librfu_stwi.o(.text);
+        src/libs/librfu_intr.o(.text);
+        src/libs/librfu_rfu.o(.text);
+        src/libs/librfu_sio32id.o(.text);
         *libgcc.a:*_call_via_rX*.o(.text);
         *libgcc.a:*_divsi3*.o(.text);
         *libgcc.a:*_dvmd_tls*.o(.text);
@@ -472,6 +483,11 @@ SECTIONS {
         src/text.o(.rodata);
         src/string_util.o(.rodata);
         src/link.o(.rodata);
+        src/link_rfu.o(.rodata);
+        src/link_rfu_connect.o(.rodata);
+        src/link_rfu_2.o(.rodata);
+        src/link_rfu_3.o(.rodata);
+        src/AgbRfu_LinkManager.o(.rodata);
         src/rtc.o(.rodata);
         src/main_menu.o(.rodata);
 		src/battle_controllers.o(.rodata);
@@ -1221,6 +1237,8 @@ SECTIONS {
         src/libs/agb_flash_mx.o(.rodata);
         src/libs/agb_flash_le.o(.rodata);
         src/libs/siirtc.o(.rodata);
+        src/libs/librfu_rfu.o(.rodata);
+        src/libs/librfu_sio32id.o(.rodata);
         *libgcc.a:_udivdi3.o(.rodata);
         *libc.a(.rodata);
         *libc.a(.data);

@@ -28,6 +28,8 @@ typedef u8  bool8;
 typedef u16 bool16;
 typedef u32 bool32;
 
+typedef vu8 vbool8;
+
 struct BgCnt
 {
     u16 priority:2;

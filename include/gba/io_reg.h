@@ -298,6 +298,8 @@
 #define REG_ADDR_DMA3CNT_H   (REG_BASE + REG_OFFSET_DMA3CNT_H)
 
 #define REG_ADDR_TMCNT       (REG_BASE + REG_OFFSET_TMCNT)
+#define REG_ADDR_TMCNT_L     (REG_BASE + REG_OFFSET_TM0CNT_L)
+#define REG_ADDR_TMCNT_H     (REG_BASE + REG_OFFSET_TM0CNT_H)
 #define REG_ADDR_TM0CNT      (REG_BASE + REG_OFFSET_TM0CNT)
 #define REG_ADDR_TM0CNT_L    (REG_BASE + REG_OFFSET_TM0CNT_L)
 #define REG_ADDR_TM0CNT_H    (REG_BASE + REG_OFFSET_TM0CNT_H)
@@ -457,7 +459,9 @@
 #define REG_DMA3CNT_L   (*(vu16 *)REG_ADDR_DMA3CNT_L)
 #define REG_DMA3CNT_H   (*(vu16 *)REG_ADDR_DMA3CNT_H)
 
-#define REG_TMCNT(n)    (*(vu16 *)(REG_ADDR_TMCNT + ((n) * 4)))
+#define REG_TMCNT(n)    (*(vu32 *)(REG_ADDR_TMCNT + ((n) * 4)))
+#define REG_TMCNT_L(n)  (*(vu16 *)(REG_ADDR_TMCNT_L + ((n) * 4)))
+#define REG_TMCNT_H(n)  (*(vu16 *)(REG_ADDR_TMCNT_H + ((n) * 4)))
 #define REG_TM0CNT      (*(vu32 *)REG_ADDR_TM0CNT)
 #define REG_TM0CNT_L    (*(vu16 *)REG_ADDR_TM0CNT_L)
 #define REG_TM0CNT_H    (*(vu16 *)REG_ADDR_TM0CNT_H)

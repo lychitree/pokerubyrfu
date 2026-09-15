@@ -438,7 +438,8 @@ const struct ObjectEventGraphicsInfo *const gObjectEventGraphicsInfoPointers[NUM
     [OBJ_EVENT_GFX_AZURILL] =                   &gObjectEventGraphicsInfo_Azurill,
     [OBJ_EVENT_GFX_MOM] =                       &gObjectEventGraphicsInfo_Mom,
     [OBJ_EVENT_GFX_LINK_BRENDAN] =              &gObjectEventGraphicsInfo_LinkBrendan,
-    [OBJ_EVENT_GFX_LINK_MAY] =                  &gObjectEventGraphicsInfo_LinkMay
+    [OBJ_EVENT_GFX_LINK_MAY] =                  &gObjectEventGraphicsInfo_LinkMay,
+    [OBJ_EVENT_GFX_UNION_ROOM_NURSE] =          &gObjectEventGraphicsInfo_UnionRoomAttendant
 };
 
 #endif //POKERUBY_OBJECT_EVENT_GRAPHICS_INFO_POINTERS_H

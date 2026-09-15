@@ -94,7 +94,7 @@ PERL := perl
 ASFLAGS  := -mcpu=arm7tdmi -I include --defsym $(GAME_VERSION)=1 --defsym REVISION=$(GAME_REVISION) --defsym DEBUG_FIX=$(DEBUG_FIX) --defsym $(GAME_LANGUAGE)=1 --defsym DEBUG=$(DEBUG) --defsym MODERN=$(MODERN)
 CPPFLAGS := -iquote include -Werror -Wno-trigraphs -D $(GAME_VERSION) -D REVISION=$(GAME_REVISION) -D $(GAME_LANGUAGE) -D=DEBUG_FIX$(DEBUG_FIX) -D DEBUG=$(DEBUG) -D MODERN=$(MODERN)
 ifeq ($(MODERN),0)
-CPPFLAGS += -I tools/agbcc/include -nostdinc -undef
+CPPFLAGS += -I tools/agbcc/include -nostdinc -undef -std=gnu89
 CC1FLAGS := -g -mthumb-interwork -Wimplicit -Wparentheses -Wunused -Werror -O2 -fhex-asm
 else
 CC1FLAGS := -g -mthumb -mthumb-interwork -mabi=apcs-gnu -mcpu=arm7tdmi -O2 -fno-toplevel-reorder -fno-aggressive-loop-optimizations -Wno-pointer-to-int-cast -Wno-stringop-overflow
@@ -156,6 +156,12 @@ ifeq ($(MODERN),0)
 %src/libs/m4a.o:          CC1 := tools/agbcc/bin/old_agbcc$(EXE)
 %src/libs/libisagbprn.o:  CC1 := tools/agbcc/bin/old_agbcc$(EXE)
 %src/libs/libisagbprn.o:  CC1FLAGS := -mthumb-interwork
+%src/libs/librfu_intr.o:  CC1 := tools/agbcc/bin/agbcc_arm$(EXE)
+%src/libs/librfu_intr.o:  CC1FLAGS := -O2 -mthumb-interwork -quiet
+# Upstream (pokeemerald) doesn't build with -Wunused, so librfu_rfu.c carries
+# a few harmless unused locals that are fine under pokeemerald's flags but
+# fatal under pokeruby's stricter default CC1FLAGS.
+%src/libs/librfu_rfu.o:   CC1FLAGS := -g -mthumb-interwork -Wimplicit -Wparentheses -Werror -O2 -fhex-asm
 endif
 
 

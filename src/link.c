@@ -1,6 +1,7 @@
 #include "global.h"
 #include "cable_club.h"
 #include "link.h"
+#include "link_rfu.h"
 #include "battle.h"
 #include "berry.h"
 #include "hall_of_fame.h"
@@ -86,7 +87,7 @@ static void EnableSerial(void);
 static void CheckMasterOrSlave(void);
 static void InitTimer(void);
 static void EnqueueSendCmd(u16 *);
-static void DequeueRecvCmds(u16[CMD_LENGTH][MAX_LINK_PLAYERS]);
+static void DequeueRecvCmds(u16[CMD_LENGTH][MAX_RFU_PLAYERS]);
 static void StartTransfer(void);
 static bool8 DoHandshake(void);
 static void DoRecv(void);
@@ -121,20 +122,23 @@ struct LinkPlayerBlock localLinkPlayerBlock;
 bool8 gLinkErrorOccurred;
 u32 gLinkDebugValue2;
 bool8 gLinkPlayerPending[MAX_LINK_PLAYERS];
-struct LinkPlayer gLinkPlayers[MAX_LINK_PLAYERS];
+struct LinkPlayer gLinkPlayers[MAX_RFU_PLAYERS];
 bool8 gBlockReceived[MAX_LINK_PLAYERS];
 u16 gLinkHeldKeys;
 u16 gLinkTimeOutCounter;
 struct LinkPlayer localLinkPlayer;
-u16 gRecvCmds[CMD_LENGTH][MAX_LINK_PLAYERS];
+u16 gRecvCmds[CMD_LENGTH][MAX_RFU_PLAYERS];
 u32 gLinkStatus;
 bool8 gLinkDummyBool;
 u8 byte_3002A68;
 u8 gBlockSendBuffer[BLOCK_BUFFER_SIZE];
 bool8 u8_array_3002B70[MAX_LINK_PLAYERS];
 u16 gLinkType;
+COMMON_DATA bool8 gWirelessCommType = 0;
+COMMON_DATA u16 gLinkPartnersHeldKeys[6] = {0};
+EWRAM_DATA u32 gBerryBlenderKeySendAttempts = 0;
 bool8 u8_array_3002B78[MAX_LINK_PLAYERS];
-u16 gBlockRecvBuffer[MAX_LINK_PLAYERS][BLOCK_BUFFER_SIZE / 2];
+u16 gBlockRecvBuffer[MAX_RFU_PLAYERS][BLOCK_BUFFER_SIZE / 2];
 bool8 gSuppressLinkErrorMessage;
 u8 gSavedLinkPlayerCount;
 u16 gSendCmd[CMD_LENGTH];
@@ -142,7 +146,7 @@ u8 gSavedMultiplayerId;
 bool8 gReceivedRemoteLinkPlayers;
 struct LinkTestBGInfo gLinkTestBGInfo;
 void (*gLinkCallback)(void);
-struct LinkPlayer gSavedLinkPlayers[MAX_LINK_PLAYERS];
+struct LinkPlayer gSavedLinkPlayers[MAX_RFU_PLAYERS];
 u8 gShouldAdvanceLinkState;
 u16 gLinkTestBlockChecksums[MAX_LINK_PLAYERS];
 #if DEBUG
@@ -294,6 +298,117 @@ static void InitLocalLinkPlayer(void)
     localLinkPlayer.language = gGameLanguage;
     localLinkPlayer.version = gGameVersion + 0x4000;
     localLinkPlayer.lp_field_2 = 0;
+}
+
+// See the comment on struct RfuLinkPlayer in link.h: this is the RFU
+// counterpart of the wired-link block-preparation code inlined in
+// ProcessRecvCmds (the 0x2222 case) below, translating field-by-field into
+// Emerald's wire layout instead of memcpy'ing pokeruby's own struct LinkPlayer.
+void LocalLinkPlayerToBlock(void)
+{
+    struct RfuLinkPlayerBlock block;
+
+    InitLocalLinkPlayer();
+    memset(&block, 0, sizeof(block));
+    memcpy(block.magic1, sMagic, sizeof(block.magic1) - 1);
+    memcpy(block.magic2, sMagic, sizeof(block.magic2) - 1);
+    block.linkPlayer.version = localLinkPlayer.version;
+    block.linkPlayer.lp_field_2 = localLinkPlayer.lp_field_2;
+    block.linkPlayer.trainerId = localLinkPlayer.trainerId;
+    memcpy(block.linkPlayer.name, localLinkPlayer.name, OT_NAME_LENGTH + 1);
+    block.linkPlayer.progressFlags = 0; // TODO: hasNationalDex/hasClearedGame, not wired to pokeruby's own flags yet
+    block.linkPlayer.progressFlagsCopy = 0;
+    block.linkPlayer.gender = localLinkPlayer.gender;
+    block.linkPlayer.linkType = localLinkPlayer.linkType;
+    block.linkPlayer.id = localLinkPlayer.id;
+    block.linkPlayer.language = localLinkPlayer.language;
+    memcpy(gBlockSendBuffer, &block, sizeof(block));
+}
+
+void LinkPlayerFromBlock(u32 who)
+{
+    struct RfuLinkPlayerBlock *block = (struct RfuLinkPlayerBlock *)gBlockRecvBuffer[who];
+    struct LinkPlayer *player = &gLinkPlayers[who];
+
+    player->version = block->linkPlayer.version;
+    player->lp_field_2 = block->linkPlayer.lp_field_2;
+    player->trainerId = block->linkPlayer.trainerId;
+    memset(player->name, 0, sizeof(player->name));
+    memcpy(player->name, block->linkPlayer.name, OT_NAME_LENGTH + 1);
+    player->gender = block->linkPlayer.gender;
+    player->linkType = block->linkPlayer.linkType;
+    player->id = block->linkPlayer.id;
+    player->language = block->linkPlayer.language;
+    ConvertLinkPlayerName(player);
+
+    if (strcmp((char *)block->magic1, (char *)sMagic) != 0
+     || strcmp((char *)block->magic2, (char *)sMagic) != 0)
+        SetMainCallback2(CB2_LinkError);
+}
+
+void ConvertLinkPlayerName(struct LinkPlayer *player)
+{
+    ConvertInternationalString(player->name, player->language);
+}
+
+void SetWirelessCommType1(void)
+{
+    if (gReceivedRemoteLinkPlayers == 0)
+        gWirelessCommType = 1;
+}
+
+void SetWirelessCommType0(void)
+{
+    if (gReceivedRemoteLinkPlayers == 0)
+        gWirelessCommType = 0;
+}
+
+static void SetWirelessCommType0_Internal(void)
+{
+    if (gReceivedRemoteLinkPlayers == 0)
+        gWirelessCommType = 0;
+}
+
+// The real, canonical hardware-detection check other RFU code (and the main
+// menu) calls by this name. Distinct from the script special of the same
+// purpose added for the Union Room prototype -- see
+// ScrSpecial_IsWirelessAdapterConnected in src/link_rfu.c, which now just
+// delegates to this.
+bool8 IsWirelessAdapterConnected(void)
+{
+    SetWirelessCommType1();
+    InitRFUAPI();
+    if (rfu_LMAN_REQBN_softReset_and_checkID() == RFU_ID)
+    {
+        rfu_REQ_stopMode();
+        rfu_waitREQComplete();
+        return TRUE;
+    }
+    SetWirelessCommType0_Internal();
+    CloseLink();
+    RestoreSerialTimer3IntrHandlers();
+    return FALSE;
+}
+
+void ClearSavedLinkPlayers(void)
+{
+    memset(gSavedLinkPlayers, 0, sizeof(gSavedLinkPlayers));
+}
+
+static struct
+{
+    u32 status;
+    u8 lastSendQueueCount;
+    u8 lastRecvQueueCount;
+    bool8 disconnected;
+} sLinkErrorBuffer; // implicitly zero-initialized (.bss) -- an explicit = {0} here lands agbcc in .data instead
+
+void SetLinkErrorBuffer(u32 status, u8 lastSendQueueCount, u8 lastRecvQueueCount, bool8 disconnected)
+{
+    sLinkErrorBuffer.status = status;
+    sLinkErrorBuffer.lastSendQueueCount = lastSendQueueCount;
+    sLinkErrorBuffer.lastRecvQueueCount = lastRecvQueueCount;
+    sLinkErrorBuffer.disconnected = disconnected;
 }
 
 static void VBlankCB_LinkTest(void)
@@ -1423,7 +1538,7 @@ void ResetSerial(void)
     DisableSerial();
 }
 
-u32 LinkMain1(u8 *shouldAdvanceLinkState, u16 *sendCmd, u16 recvCmds[CMD_LENGTH][MAX_LINK_PLAYERS])
+u32 LinkMain1(u8 *shouldAdvanceLinkState, u16 *sendCmd, u16 recvCmds[CMD_LENGTH][MAX_RFU_PLAYERS])
 {
     u32 retVal;
     u32 retVal2;
@@ -1578,7 +1693,7 @@ static void EnqueueSendCmd(u16 *sendCmd)
     gLastSendQueueCount = gLink.sendQueue.count;
 }
 
-void DequeueRecvCmds(u16 recvCmds[CMD_LENGTH][MAX_LINK_PLAYERS])
+void DequeueRecvCmds(u16 recvCmds[CMD_LENGTH][MAX_RFU_PLAYERS])
 {
     u8 i;
     u8 j;

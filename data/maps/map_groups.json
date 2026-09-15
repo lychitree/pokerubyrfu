@@ -445,7 +445,8 @@
     "InsideOfTruck",
     "SSTidalCorridor",
     "SSTidalLowerDeck",
-    "SSTidalRooms"
+    "SSTidalRooms",
+    "UnionRoom"
   ],
   "gMapGroup_SpecialArea": [
     "SafariZone_Northwest",

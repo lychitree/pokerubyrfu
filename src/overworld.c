@@ -95,6 +95,7 @@ EWRAM_DATA struct WarpData gWarpDestination = {0};
 EWRAM_DATA struct WarpData gFixedDiveWarp = {0};
 EWRAM_DATA struct WarpData gFixedHoleWarp = {0};
 EWRAM_DATA struct InitialPlayerAvatarState gInitialPlayerAvatarState = {0};
+COMMON_DATA u16 gHeldKeyCodeToSend = 0;
 EWRAM_DATA static u16 sAmbientCrySpecies = 0;
 EWRAM_DATA static bool8 sIsAmbientCryWaterMon = FALSE;
 EWRAM_DATA struct LinkPlayerObjectEvent gLinkPlayerObjectEvents[4] = {0};

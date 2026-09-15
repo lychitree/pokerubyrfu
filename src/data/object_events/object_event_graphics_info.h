@@ -1119,6 +1119,25 @@ const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_CyclingTriathleteF
     .affineAnims = gDummySpriteAffineAnimTable,
 };
 
+const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_UnionRoomAttendant = {
+    .tileTag = 0xffff,
+    .paletteTag = 0x1103,
+    .bridgeReflectionPaletteTag = 0x11ff,
+    .size = 256,
+    .width = 16,
+    .height = 32,
+    .paletteSlot = 2,
+    .shadowSize = SHADOW_SIZE_M,
+    .inanimate = FALSE,
+    .disableReflectionPaletteLoad = FALSE,
+    .tracks = TRACKS_FOOT,
+    .oam = &gFieldOamData_16x32,
+    .subspriteTables = gObjectEventSubspriteTables_16x32,
+    .anims = gObjectEventImageAnimTable_Standard,
+    .images = gObjectEventPicTable_UnionRoomAttendant,
+    .affineAnims = gDummySpriteAffineAnimTable,
+};
+
 const struct ObjectEventGraphicsInfo gObjectEventGraphicsInfo_Nurse = {
     .tileTag = 0xffff,
     .paletteTag = 0x1103,

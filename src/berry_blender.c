@@ -3546,3 +3546,13 @@ static void sub_8052BD0(u8 taskID)
         DestroyTask(taskID);
     }
 }
+
+// Emerald added this to report the spinning arrow's position to RFU link
+// partners (Berry Blender over wireless). Nothing in pokeruby's Berry Blender
+// state tracks this yet -- Rfu_BerryBlenderSendHeldKeys is unreachable until
+// Berry Blender-over-RFU is actually wired up, so a real implementation isn't
+// needed for the connection layer to build and work.
+u16 GetBlenderArrowPosition(void)
+{
+    return 0;
+}

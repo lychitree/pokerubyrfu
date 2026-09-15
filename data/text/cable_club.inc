@@ -174,3 +174,15 @@ OldaleTown_PokemonCenter_2F_Text_1A4E50:: @ 81A4E50
 
 OldaleTown_PokemonCenter_2F_Text_1A4E79:: @ 81A4E79
 	.string "I hope to see you again!$"
+
+OldaleTown_PokemonCenter_2F_Text_WirelessNotConnected::
+	.string "The Wireless Adapter is not\n"
+	.string "connected!$"
+
+OldaleTown_PokemonCenter_2F_Text_AreYouLeader::
+	.string "Will you be the group leader?\p"
+	.string "(One of you leads, the other joins.)$"
+
+OldaleTown_PokemonCenter_2F_Text_WirelessActivityUnsupported::
+	.string "Only trading is available over the\n"
+	.string "Wireless Adapter right now.$"

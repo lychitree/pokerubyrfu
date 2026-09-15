@@ -46,6 +46,7 @@ struct Main
 extern u8 gLinkTransferringData;
 extern struct Main gMain;
 extern bool8 gSoftResetDisabled;
+extern IntrFunc gIntrTable[];
 
 extern bool8 gLinkVSyncDisabled;
 extern const u8 gGameVersion;
@@ -60,6 +61,7 @@ void SetVBlankCallback(IntrCallback callback);
 void SetHBlankCallback(IntrCallback callback);
 void SetVCountCallback(IntrCallback callback);
 void SetSerialCallback(IntrCallback callback);
+void RestoreSerialTimer3IntrHandlers(void);
 void InitFlashTimer(void);
 void DoSoftReset(void);
 void ClearPokemonCrySongs(void);

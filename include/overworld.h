@@ -3,6 +3,11 @@
 
 #include "sprite.h"
 
+// Used by the RFU connection layer to stage a key code for SendKeysToRfu,
+// decoupled from gMain.heldKeys (which pokeruby's wired link sends directly).
+#define LINK_KEY_CODE_NULL 0x00
+extern u16 gHeldKeyCodeToSend;
+
 struct InitialPlayerAvatarState
 {
     u8 transitionFlags;

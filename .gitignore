@@ -47,3 +47,6 @@ build/
 *.diff
 porymap.*.cfg
 prefabs.json
+.env
+.env.*
+!.env.example

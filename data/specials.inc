@@ -350,6 +350,9 @@ gSpecials::
 	def_special GetNameOfEnigmaBerryInPlayerParty
 	def_special ScriptRandom
 	def_special sub_80835D8
+	def_special ScrSpecial_IsWirelessAdapterConnected
+	def_special ScrSpecial_TryBecomeLinkLeaderWireless
+	def_special ScrSpecial_TryJoinLinkGroupWireless
 .ifdef GERMAN
 	def_special nullsub_814B200
 .endif

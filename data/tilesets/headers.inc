@@ -693,3 +693,15 @@ gTileset_BattleTower:: @ 828724C
 	.4byte gMetatiles_BattleTower
 	.4byte gMetatileAttributes_BattleTower
 	.4byte NULL @ animation callback
+
+	.align 2
+
+gTileset_UnionRoom::
+	.byte TRUE @ is compressed
+	.byte TRUE @ is secondary tileset
+	.2byte 0 @ padding
+	.4byte gTilesetTiles_UnionRoom
+	.4byte gTilesetPalettes_UnionRoom
+	.4byte gMetatiles_UnionRoom
+	.4byte gMetatileAttributes_UnionRoom
+	.4byte NULL @ animation callback

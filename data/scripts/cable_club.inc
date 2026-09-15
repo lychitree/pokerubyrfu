@@ -196,22 +196,8 @@ OldaleTown_PokemonCenter_2F_EventScript_1A3EF2:: @ 81A3EF2
 	call OldaleTown_PokemonCenter_2F_EventScript_1A3FEF
 	compare VAR_0x8004, 0
 	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4319
-	message OldaleTown_PokemonCenter_2F_Text_1A490C
-	waitmessage
-	special sub_808347C
-	waitstate
-	compare VAR_RESULT, 1
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A3F5E
-	compare VAR_RESULT, 2
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4301
-	compare VAR_RESULT, 3
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A430D
-	compare VAR_RESULT, 4
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4068
-	compare VAR_RESULT, 5
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4319
-	compare VAR_RESULT, 6
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A42F5
+	goto OldaleTown_PokemonCenter_2F_EventScript_WirelessActivityUnsupported
+	end
 
 OldaleTown_PokemonCenter_2F_EventScript_1A3F5E:: @ 81A3F5E
 	special ScrSpecial_HealPlayerParty
@@ -362,22 +348,8 @@ OldaleTown_PokemonCenter_2F_EventScript_1A40FA:: @ 81A40FA
 	call Common_EventScript_SaveGame
 	compare VAR_RESULT, 0
 	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4319
-	message OldaleTown_PokemonCenter_2F_Text_1A490C
-	waitmessage
-	special sub_80834E4
-	waitstate
-	compare VAR_RESULT, 1
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4166
-	compare VAR_RESULT, 2
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4301
-	compare VAR_RESULT, 3
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A430D
-	compare VAR_RESULT, 4
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A432D
-	compare VAR_RESULT, 5
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4319
-	compare VAR_RESULT, 6
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A42F5
+	goto OldaleTown_PokemonCenter_2F_EventScript_TradeWireless
+	end
 
 OldaleTown_PokemonCenter_2F_EventScript_1A4166:: @ 81A4166
 	setvar VAR_0x8004, 3
@@ -455,26 +427,8 @@ OldaleTown_PokemonCenter_2F_EventScript_1A4229:: @ 81A4229
 	call Common_EventScript_SaveGame
 	compare VAR_RESULT, 0
 	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4319
-	message OldaleTown_PokemonCenter_2F_Text_1A490C
-	waitmessage
-	special sub_808350C
-	waitstate
-	special sub_80835D8
-	waitstate
-	compare VAR_RESULT, 1
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4294
-	compare VAR_RESULT, 2
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4301
-	compare VAR_RESULT, 3
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A430D
-	compare VAR_RESULT, 4
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A432D
-	compare VAR_RESULT, 5
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4319
-	compare VAR_RESULT, 6
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A42F5
-	compare VAR_RESULT, 7
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A42E9
+	goto OldaleTown_PokemonCenter_2F_EventScript_WirelessActivityUnsupported
+	end
 
 OldaleTown_PokemonCenter_2F_EventScript_1A4294:: @ 81A4294
 	setvar VAR_0x8004, 4
@@ -537,6 +491,53 @@ OldaleTown_PokemonCenter_2F_EventScript_1A4319:: @ 81A4319
 	waitmessage
 	waitbuttonpress
 	release
+	end
+
+@ Wireless trade over the Wireless Adapter. The wired serial path is not used.
+@ Trade selected + party OK + saved -> detect the adapter, pick a leader/join
+@ role, establish the RFU connection, then drop into the existing Trade Center
+@ (which trades over whichever link transport is live -- now RFU). Battle and
+@ record-corner-over-wireless are out of scope for this pass and fall through
+@ to WirelessActivityUnsupported. See CLAUDE.md.
+OldaleTown_PokemonCenter_2F_EventScript_TradeWireless:: @ new
+	special ScrSpecial_IsWirelessAdapterConnected
+	compare VAR_RESULT, FALSE
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_WirelessNotConnected
+
+OldaleTown_PokemonCenter_2F_EventScript_TradeChooseRole:: @ new
+	msgbox OldaleTown_PokemonCenter_2F_Text_AreYouLeader, MSGBOX_YESNO
+	compare VAR_RESULT, YES
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_TradeLead
+	compare VAR_RESULT, NO
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_TradeJoin
+	goto OldaleTown_PokemonCenter_2F_EventScript_1A4319
+
+OldaleTown_PokemonCenter_2F_EventScript_TradeLead:: @ new
+	special ScrSpecial_TryBecomeLinkLeaderWireless
+	waitstate
+	compare VAR_RESULT, 1 @ LINKUP_SUCCESS
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4166
+	goto OldaleTown_PokemonCenter_2F_EventScript_1A4319
+
+OldaleTown_PokemonCenter_2F_EventScript_TradeJoin:: @ new
+	special ScrSpecial_TryJoinLinkGroupWireless
+	waitstate
+	compare VAR_RESULT, 1 @ LINKUP_SUCCESS
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4166
+	goto OldaleTown_PokemonCenter_2F_EventScript_1A4319
+
+OldaleTown_PokemonCenter_2F_EventScript_WirelessActivityUnsupported:: @ new
+	message OldaleTown_PokemonCenter_2F_Text_WirelessActivityUnsupported
+	waitmessage
+	waitbuttonpress
+	goto OldaleTown_PokemonCenter_2F_EventScript_1A4319
+	end
+
+OldaleTown_PokemonCenter_2F_EventScript_WirelessNotConnected:: @ new
+	message OldaleTown_PokemonCenter_2F_Text_WirelessNotConnected
+	waitmessage
+	waitbuttonpress
+	goto OldaleTown_PokemonCenter_2F_EventScript_1A4319
 	end
 
 OldaleTown_PokemonCenter_2F_EventScript_1A4325:: @ 81A4325

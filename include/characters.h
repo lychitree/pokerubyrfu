@@ -5,6 +5,15 @@
 #define CHAR_LV             0x34
 #define CHAR_SONG_WORD_SEPARATOR 0x37  // separates words in the bard song. Not sure if it's used for anything else
 #define CHAR_0              0xA1
+#define CHAR_1              0xA2
+#define CHAR_2              0xA3
+#define CHAR_3              0xA4
+#define CHAR_4              0xA5
+#define CHAR_5              0xA6
+#define CHAR_6              0xA7
+#define CHAR_7              0xA8
+#define CHAR_8              0xA9
+#define CHAR_9              0xAA
 #define CHAR_EXCL_MARK      0xAB
 #define CHAR_QUESTION_MARK  0xAC
 #define CHAR_PERIOD         0xAD
@@ -73,6 +82,9 @@
 #define CHAR_y              0xED
 #define CHAR_z              0xEE
 #define CHAR_COLON          0xF0
+#define CHAR_DYNAMIC        0xF7
+#define CHAR_KEYPAD_ICON    0xF8
+#define CHAR_EXTRA_SYMBOL   0xF9
 #define CHAR_PROMPT_SCROLL  0xFA // waits for button press and scrolls dialog
 #define CHAR_PROMPT_CLEAR   0xFB // waits for button press and clears dialog
 #define EXT_CTRL_CODE_BEGIN 0xFC // extended control code

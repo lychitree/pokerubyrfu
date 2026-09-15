@@ -220,4 +220,14 @@
 #define Dma3FillLarge16_(value, dest, size) Dma3FillLarge_(value, dest, size, 16)
 #define Dma3FillLarge32_(value, dest, size) Dma3FillLarge_(value, dest, size, 32)
 
+#define IntrEnable(flags)                                       \
+{                                                               \
+    u16 imeTemp;                                                \
+                                                                 \
+    imeTemp = REG_IME;                                          \
+    REG_IME = 0;                                                \
+    REG_IE |= flags;                                            \
+    REG_IME = imeTemp;                                          \
+}                                                                \
+
 #endif // GUARD_GBA_MACRO_H

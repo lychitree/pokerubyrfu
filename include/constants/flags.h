@@ -812,6 +812,7 @@
 #define FLAG_VISITED_MOSSDEEP_CITY    (SYSTEM_FLAGS + 0x1C)
 #define FLAG_VISITED_SOOTOPOLIS_CITY  (SYSTEM_FLAGS + 0x1D)
 #define FLAG_VISITED_EVER_GRANDE_CITY (SYSTEM_FLAGS + 0x1E)
+#define FLAG_IS_CHAMPION              (SYSTEM_FLAGS + 0x1F) // Broadcast to RFU link partners as canLinkNationally. Distinct from FLAG_SYS_GAME_CLEAR in Emerald; nothing sets this yet -- needs wiring to pokeruby's post-Elite-Four trigger
 
 #define FLAG_SYS_USE_FLASH        (SYSTEM_FLAGS + 0x28)
 #define FLAG_SYS_USE_STRENGTH     (SYSTEM_FLAGS + 0x29)
@@ -897,6 +898,18 @@
 #define FLAG_DAILY_RECEIVED_BERRY_FROM_BERRYMASTER_WIFE (SYSTEM_FLAGS + 0xD1)
 #define FLAG_DAILY_RECEIVED_BERRY_SOOTOPOLIS  (SYSTEM_FLAGS + 0xD2)
 // Daily flags end at 0x8FF
+
+// Union Room prototype: hides the 8 placeholder "other player" object events
+// in the Union Room map until real RFU networking exists to reposition them
+// for actually-connected peers. Never cleared yet -- see CLAUDE.md.
+#define FLAG_HIDE_UNION_ROOM_PLAYER_1 (SYSTEM_FLAGS + 0xD3)
+#define FLAG_HIDE_UNION_ROOM_PLAYER_2 (SYSTEM_FLAGS + 0xD4)
+#define FLAG_HIDE_UNION_ROOM_PLAYER_3 (SYSTEM_FLAGS + 0xD5)
+#define FLAG_HIDE_UNION_ROOM_PLAYER_4 (SYSTEM_FLAGS + 0xD6)
+#define FLAG_HIDE_UNION_ROOM_PLAYER_5 (SYSTEM_FLAGS + 0xD7)
+#define FLAG_HIDE_UNION_ROOM_PLAYER_6 (SYSTEM_FLAGS + 0xD8)
+#define FLAG_HIDE_UNION_ROOM_PLAYER_7 (SYSTEM_FLAGS + 0xD9)
+#define FLAG_HIDE_UNION_ROOM_PLAYER_8 (SYSTEM_FLAGS + 0xDA)
 
 // SPECIAL FLAGS
 

@@ -88,4 +88,10 @@ VBlankIntrWait: @ 81E0830
 	bx lr
 	thumb_func_end VBlankIntrWait
 
+	thumb_func_start Div
+Div:
+	swi 0x6
+	bx lr
+	thumb_func_end Div
+
 	.align 2, 0 @ Don't pad with nop.

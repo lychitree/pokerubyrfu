@@ -5,7 +5,9 @@
 #include "battle_controllers.h"
 #include "intro.h"
 #include "link.h"
+#include "link_rfu.h"
 #include "load_save.h"
+#include "malloc.h"
 #include "m4a.h"
 #include "play_time.h"
 #include "random.h"
@@ -112,6 +114,7 @@ void AgbMain()
     CheckForFlashMemory();
     InitMainCallbacks();
     InitMapMusic();
+    InitHeap(gHeap, HEAP_SIZE);
     SeedRngWithRtc();
 
     gSoftResetDisabled = FALSE;
@@ -169,10 +172,25 @@ void AgbMain()
 
 static void UpdateLinkAndCallCallbacks(void)
 {
-    gLinkStatus = LinkMain1(&gShouldAdvanceLinkState, gSendCmd, gRecvCmds);
-    LinkMain2(&gMain.heldKeys);
-    if (!(gLinkStatus & LINK_STAT_RECEIVED_NOTHING) || sub_8055940() != 1)
+    // Pump either the wired serial link or the RFU (wireless) link, depending
+    // on which transport is active. Emerald factors this into HandleLinkConnection
+    // in link.c; kept inline here to match pokeruby's existing structure. When
+    // wireless, RfuMain1/RfuMain2 drain the RFU queues in place of LinkMain1/2,
+    // which is what lets the existing (transport-agnostic) trade/link code run
+    // over the Wireless Adapter.
+    if (gWirelessCommType == 0)
+    {
+        gLinkStatus = LinkMain1(&gShouldAdvanceLinkState, gSendCmd, gRecvCmds);
+        LinkMain2(&gMain.heldKeys);
+        if (!(gLinkStatus & LINK_STAT_RECEIVED_NOTHING) || sub_8055940() != 1)
+            CallCallbacks();
+    }
+    else
+    {
+        RfuMain1();
+        RfuMain2();
         CallCallbacks();
+    }
 }
 
 static void InitMainCallbacks(void)
@@ -300,6 +318,16 @@ void SetVCountCallback(IntrCallback callback)
 void SetSerialCallback(IntrCallback callback)
 {
     gMain.serialCallback = callback;
+}
+
+// Emerald/FRLG's interrupt table has Serial at index 1 and Timer3 at index 2;
+// pokeruby's has them at 0 and 1 (see gIntrTableTemplate above). Copying this
+// function verbatim from either reference clobbers Timer3/HBlank and never
+// restores Serial.
+void RestoreSerialTimer3IntrHandlers(void)
+{
+    gIntrTable[0] = SerialIntr;
+    gIntrTable[1] = Timer3Intr;
 }
 
 static void VBlankIntr(void)

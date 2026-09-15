@@ -422,3 +422,11 @@ gMetatiles_BattleTower:: @ 82863BE
 gMetatileAttributes_BattleTower:: @ 8286BEE
 	.incbin "data/tilesets/secondary/battle_tower/metatile_attributes.bin"
 
+	.align 1
+gMetatiles_UnionRoom::
+	.incbin "data/tilesets/secondary/union_room/metatiles.bin"
+
+	.align 1
+gMetatileAttributes_UnionRoom::
+	.incbin "data/tilesets/secondary/union_room/metatile_attributes.bin"
+
