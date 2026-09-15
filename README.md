@@ -13,7 +13,7 @@ For pret projects, see [pret.github.io](https://pret.github.io/).
 
 <p align="center">
   <img src="images/missing-wireless.png" alt="Wireless Adapter not detected" width="32%">
-  <img src="images/wireless-detected.png" alt="Wireless Adapter detected" width="32%">
+  <img src="images/wireless-decision.png" alt="Wireless Adapter detected" width="32%">
   <img src="images/union-room-early.png" alt="Partial Union Room implementation" width="32%">
 </p>
 
