@@ -70,6 +70,7 @@ static void PrintPlayerName(void);
 static void PrintPlayTime(void);
 static void PrintPokedexCount(void);
 static void PrintBadgeCount(void);
+static void PrintBuildInfo(void);
 static void Task_NewGameSpeech1(u8 taskId);
 static void Task_NewGameSpeech2(u8 taskId);
 static void Task_NewGameSpeech3(u8 taskId);
@@ -406,6 +407,7 @@ void Task_MainMenuDraw(u8 taskId)
             PrintMainMenuItem(gMainMenuString_NewGame, 2, 1);
             Menu_DrawStdWindowFrame(1, 4, 28, 7);
             PrintMainMenuItem(gMainMenuString_Option, 2, 5);
+            PrintBuildInfo();
             break;
         case HAS_SAVED_GAME:
             Menu_DrawStdWindowFrame(1, 0, 28, 7);
@@ -415,6 +417,7 @@ void Task_MainMenuDraw(u8 taskId)
             Menu_DrawStdWindowFrame(1, 12, 28, 15);
             PrintMainMenuItem(gMainMenuString_Option, 2, 13);
             PrintSaveFileInfo();
+            PrintBuildInfo();
             break;
         case HAS_MYSTERY_EVENT:
             Menu_DrawStdWindowFrame(1, 0, 28, 7);
@@ -680,6 +683,46 @@ void PrintSaveFileInfo(void)
     PrintPokedexCount();
     PrintPlayTime();
     PrintBadgeCount();
+}
+
+#define RFU_PORT_BUILD_NUMBER 18
+
+#ifdef RUBY
+static const u8 sBuildInfoText_Version[] = _("Ruby");
+#else
+static const u8 sBuildInfoText_Version[] = _("Sapphire");
+#endif
+
+#if DEBUG
+static const u8 sBuildInfoText_DebugSuffix[] = _("-debug");
+#endif
+
+static const u8 sBuildInfoText_BuildLabel[] = _(" build");
+
+void PrintBuildInfo(void)
+{
+    u8 text[24];
+    u8 buffer[32];
+    u8 i;
+    u8 len;
+
+    StringCopy(text, sBuildInfoText_Version);
+#if DEBUG
+    StringAppend(text, sBuildInfoText_DebugSuffix);
+#endif
+    StringAppend(text, sBuildInfoText_BuildLabel);
+    ConvertIntToDecimalString(&text[StringLength(text)], RFU_PORT_BUILD_NUMBER);
+
+    buffer[0] = 0xFC;
+    buffer[1] = 1;
+    buffer[2] = TEXT_COLOR_RED;
+
+    len = StringLength(text);
+    for (i = 0; i < len; i++)
+        buffer[3 + i] = text[i];
+    buffer[3 + len] = EOS;
+
+    Menu_PrintText(buffer, 2, 18);
 }
 
 void PrintPlayerName(void)

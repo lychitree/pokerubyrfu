@@ -444,19 +444,37 @@ void OpenLink(void)
 {
     s32 i;
 
-    ResetSerial();
-    InitLink();
+    // Retail Emerald branches here on gWirelessCommType (link.c's OpenLink);
+    // pokeruby's OpenLink never got that branch when the RFU port started, so
+    // every wireless caller was silently re-arming the CABLE link hardware
+    // (EnableSerial/Task_TriggerHandshake) on top of an already-live RFU
+    // session -- a real register-level clash between the two SIO32 protocols,
+    // not just a logic bug. That's the actual cause of the "hangs after
+    // Yes/No, music keeps playing" report: the CPU wedges servicing an
+    // interrupt whose expected hardware state got stomped by the wired path.
+    if (!gWirelessCommType)
+    {
+        ResetSerial();
+        InitLink();
 
-    gLinkCallback = LinkCB_RequestPlayerDataExchange;
-    gLinkVSyncDisabled = FALSE;
-    gLinkErrorOccurred = FALSE;
-    gSuppressLinkErrorMessage = FALSE;
+        gLinkCallback = LinkCB_RequestPlayerDataExchange;
+        gLinkVSyncDisabled = FALSE;
+        gLinkErrorOccurred = FALSE;
+        gSuppressLinkErrorMessage = FALSE;
 
-    ResetBlockReceivedFlags();
+        ResetBlockReceivedFlags();
 
-    sDummy1 = 0;
-    byte_3002A68 = 0;
-    gLinkDummyBool = FALSE;
+        sDummy1 = 0;
+        byte_3002A68 = 0;
+        gLinkDummyBool = FALSE;
+
+        CreateTask(Task_TriggerHandshake, 2);
+    }
+    else
+    {
+        InitRFUAPI();
+    }
+
     gReceivedRemoteLinkPlayers = FALSE;
 
     for (i = 0; i < 4; i++)
@@ -465,8 +483,6 @@ void OpenLink(void)
         u8_array_3002B78[i] = 0;
         u8_array_3002B70[i] = 0;
     }
-
-    CreateTask(Task_TriggerHandshake, 2);
 }
 
 void CloseLink(void)

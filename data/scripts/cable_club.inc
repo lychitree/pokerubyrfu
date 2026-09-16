@@ -196,7 +196,26 @@ OldaleTown_PokemonCenter_2F_EventScript_1A3EF2:: @ 81A3EF2
 	call OldaleTown_PokemonCenter_2F_EventScript_1A3FEF
 	compare VAR_0x8004, 0
 	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4319
-	goto OldaleTown_PokemonCenter_2F_EventScript_WirelessActivityUnsupported
+	@ Same missing-linkup regression as the Trade Center path (see
+	@ OldaleTown_PokemonCenter_2F_EventScript_TradeWiredLinkup) -- restoring
+	@ the "wait for link" step instead of jumping straight into the room.
+	@ sub_808347C (not sub_8083664 -- see the note on the Trade version of
+	@ this fix) switches on VAR_0x8004 internally for battle mode 1/2/5.
+	message OldaleTown_PokemonCenter_2F_Text_1A490C
+	waitmessage
+	special sub_808347C
+	waitstate
+	compare VAR_RESULT, 1 @ LINKUP_SUCCESS
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A3F5E
+	compare VAR_RESULT, 2 @ LINKUP_SOMEONE_NOT_READY
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4301
+	compare VAR_RESULT, 3 @ LINKUP_DIFF_SELECTIONS
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A430D
+	compare VAR_RESULT, 4 @ LINKUP_WRONG_NUM_PLAYERS
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A432D
+	compare VAR_RESULT, 6 @ LINKUP_CONNECTION_ERROR
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A42F5
+	goto OldaleTown_PokemonCenter_2F_EventScript_1A4319
 	end
 
 OldaleTown_PokemonCenter_2F_EventScript_1A3F5E:: @ 81A3F5E
@@ -335,6 +354,13 @@ VerdanturfTown_PokemonCenter_2F_EventScript_1A40CC:: @ 81A40CC
 	copyvar VAR_0x8007, VAR_LAST_TALKED
 	lock
 	faceplayer
+	@ Detect the adapter before any dialogue, like retail Emerald's
+	@ DirectCornerAttendant does (data/scripts/cable_club.inc in pokeemerald).
+	@ VAR_0x8006 carries the result across the rest of this flow: present ->
+	@ wireless role-select; absent -> fall straight through to the original
+	@ Ruby/Sapphire wired cable-link Trade Center, unmodified.
+	special ScrSpecial_IsWirelessAdapterConnected
+	copyvar VAR_0x8006, VAR_RESULT
 	msgbox OldaleTown_PokemonCenter_2F_Text_1A457E, MSGBOX_YESNO
 	compare VAR_RESULT, NO
 	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4319
@@ -348,7 +374,58 @@ OldaleTown_PokemonCenter_2F_EventScript_1A40FA:: @ 81A40FA
 	call Common_EventScript_SaveGame
 	compare VAR_RESULT, 0
 	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4319
-	goto OldaleTown_PokemonCenter_2F_EventScript_TradeWireless
+	compare VAR_0x8006, FALSE
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_TradeWiredLinkup
+	goto OldaleTown_PokemonCenter_2F_EventScript_ChooseGroupLeaderOfTwo
+	end
+
+@ Restored regression: the wired (no adapter) path was jumping straight from
+@ save into the room-entry sequence (_1A4166), skipping the actual "wait for
+@ the other player's cable link" step entirely -- this is why it went
+@ straight to "Please enter." into an empty room with no real partner ever
+@ connected, no "Please wait..." message, no B-Button-cancel opportunity.
+@
+@ First attempt at this fix called `special sub_8083664` -- a plausible-
+@ looking dispatcher in src/cable_club.c that also handles VAR_0x8004==3 --
+@ but hardware testing showed it throws a spurious link error after ~10
+@ seconds even with nothing connected, unlike retail which waits
+@ indefinitely. Root cause: sub_8083664's task chain (sub_8083710 ->
+@ sub_8083760 -> sub_80837B4/sub_80837EC) never calls
+@ SetSuppressLinkErrorMessage(TRUE), so the game's generic link-error
+@ watchdog (which normally fires when a just-opened serial link sees no
+@ responder -- expected raw hardware behavior) is never suppressed while
+@ intentionally waiting for a partner. It also never sets gSpecialVar_Result
+@ or calls ScriptContext_Enable(), so it isn't even a real fire-and-wait
+@ special the way the LINKUP_* switch below assumes -- it's a different,
+@ incomplete chain that happened to compile and run without crashing.
+@
+@ The actually-correct entry point is sub_80834E4 (src/cable_club.c) ->
+@ sub_8082CD4(2, 2) -> creates sub_8082F20's task chain, which DOES call
+@ SetSuppressLinkErrorMessage(TRUE) once a connection begins (sub_8082F68)
+@ and DOES terminate by setting gSpecialVar_Result to the same LINKUP_*
+@ codes used below + ScriptContext_Enable (sub_8083314/sub_80833EC/
+@ sub_8083418, traced by hand). It was already def_special-registered but
+@ never called by any script -- same "orphaned since some earlier edit"
+@ pattern as the text strings above. See the matching notes on the
+@ Colosseum (sub_808347C) and Record Corner (sub_808350C) versions of this
+@ same fix.
+OldaleTown_PokemonCenter_2F_EventScript_TradeWiredLinkup:: @ restored
+	setvar VAR_0x8004, 3
+	message OldaleTown_PokemonCenter_2F_Text_1A490C
+	waitmessage
+	special sub_80834E4
+	waitstate
+	compare VAR_RESULT, 1 @ LINKUP_SUCCESS
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4166
+	compare VAR_RESULT, 2 @ LINKUP_SOMEONE_NOT_READY
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4301
+	compare VAR_RESULT, 3 @ LINKUP_DIFF_SELECTIONS
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A430D
+	compare VAR_RESULT, 4 @ LINKUP_WRONG_NUM_PLAYERS
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A432D
+	compare VAR_RESULT, 6 @ LINKUP_CONNECTION_ERROR
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A42F5
+	goto OldaleTown_PokemonCenter_2F_EventScript_1A4319
 	end
 
 OldaleTown_PokemonCenter_2F_EventScript_1A4166:: @ 81A4166
@@ -427,7 +504,27 @@ OldaleTown_PokemonCenter_2F_EventScript_1A4229:: @ 81A4229
 	call Common_EventScript_SaveGame
 	compare VAR_RESULT, 0
 	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4319
-	goto OldaleTown_PokemonCenter_2F_EventScript_WirelessActivityUnsupported
+	@ Same missing-linkup regression as the Trade Center path (see
+	@ OldaleTown_PokemonCenter_2F_EventScript_TradeWiredLinkup for why
+	@ sub_808350C, not sub_8083664).
+	setvar VAR_0x8004, 4
+	message OldaleTown_PokemonCenter_2F_Text_1A490C
+	waitmessage
+	special sub_808350C
+	waitstate
+	compare VAR_RESULT, 1 @ LINKUP_SUCCESS
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4294
+	compare VAR_RESULT, 2 @ LINKUP_SOMEONE_NOT_READY
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4301
+	compare VAR_RESULT, 3 @ LINKUP_DIFF_SELECTIONS
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A430D
+	compare VAR_RESULT, 4 @ LINKUP_WRONG_NUM_PLAYERS
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A432D
+	compare VAR_RESULT, 6 @ LINKUP_CONNECTION_ERROR
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A42F5
+	compare VAR_RESULT, 12 @ LINKUP_FOREIGN_GAME
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A42E9
+	goto OldaleTown_PokemonCenter_2F_EventScript_1A4319
 	end
 
 OldaleTown_PokemonCenter_2F_EventScript_1A4294:: @ 81A4294
@@ -493,52 +590,49 @@ OldaleTown_PokemonCenter_2F_EventScript_1A4319:: @ 81A4319
 	release
 	end
 
-@ Wireless trade over the Wireless Adapter. The wired serial path is not used.
-@ Trade selected + party OK + saved -> detect the adapter, pick a leader/join
-@ role, establish the RFU connection, then drop into the existing Trade Center
-@ (which trades over whichever link transport is live -- now RFU). Battle and
-@ record-corner-over-wireless are out of scope for this pass and fall through
-@ to WirelessActivityUnsupported. See CLAUDE.md.
-OldaleTown_PokemonCenter_2F_EventScript_TradeWireless:: @ new
-	special ScrSpecial_IsWirelessAdapterConnected
-	compare VAR_RESULT, FALSE
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_WirelessNotConnected
+@ Wireless trade over the Wireless Adapter, matching retail Emerald's own
+@ cable-club wireless flow (CableClub_EventScript_ChooseLinkLeaderFrom2 /
+@ TryBecomeLinkLeader / TryJoinLinkGroup in pokeemerald's
+@ data/scripts/cable_club.inc + src/union_room.c) as closely as our simpler
+@ 2-player-only connection driver (src/link_rfu_connect.c) allows: the same
+@ "JOIN GROUP / BECOME LEADER" multichoice, the same message, and the same
+@ LINKUP_RETRY_ROLE_ASSIGN retry-in-place semantics. The adapter itself is
+@ detected earlier, before this NPC even asks "Would you like to trade?" --
+@ see VAR_0x8006 above -- so reaching here means the adapter is present.
+@ Battle and record-corner-over-wireless remain out of scope; those clerks
+@ were restored to their original wired-only behavior. See CLAUDE.md.
+OldaleTown_PokemonCenter_2F_EventScript_ChooseGroupLeaderOfTwo:: @ new
+	message OldaleTown_PokemonCenter_2F_Text_ChooseGroupLeaderOfTwo
+	waitmessage
+	multichoice 16, 6, MULTI_LINK_LEADER, FALSE
+	switch VAR_RESULT
+	case 0, OldaleTown_PokemonCenter_2F_EventScript_TryJoinGroup
+	case 1, OldaleTown_PokemonCenter_2F_EventScript_TryLeadGroup
+	case 2, OldaleTown_PokemonCenter_2F_EventScript_1A4319
+	case MULTI_B_PRESSED, OldaleTown_PokemonCenter_2F_EventScript_1A4319
+	end
 
-OldaleTown_PokemonCenter_2F_EventScript_TradeChooseRole:: @ new
-	msgbox OldaleTown_PokemonCenter_2F_Text_AreYouLeader, MSGBOX_YESNO
-	compare VAR_RESULT, YES
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_TradeLead
-	compare VAR_RESULT, NO
-	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_TradeJoin
-	goto OldaleTown_PokemonCenter_2F_EventScript_1A4319
-
-OldaleTown_PokemonCenter_2F_EventScript_TradeLead:: @ new
+OldaleTown_PokemonCenter_2F_EventScript_TryLeadGroup:: @ new
+	messageautoscroll OldaleTown_PokemonCenter_2F_Text_AwaitingCommunication
+	waitmessage
 	special ScrSpecial_TryBecomeLinkLeaderWireless
 	waitstate
 	compare VAR_RESULT, 1 @ LINKUP_SUCCESS
 	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4166
+	compare VAR_RESULT, 8 @ LINKUP_RETRY_ROLE_ASSIGN
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_ChooseGroupLeaderOfTwo
 	goto OldaleTown_PokemonCenter_2F_EventScript_1A4319
 
-OldaleTown_PokemonCenter_2F_EventScript_TradeJoin:: @ new
+OldaleTown_PokemonCenter_2F_EventScript_TryJoinGroup:: @ new
+	messageautoscroll OldaleTown_PokemonCenter_2F_Text_ChooseTrainerToTradeWith
+	waitmessage
 	special ScrSpecial_TryJoinLinkGroupWireless
 	waitstate
 	compare VAR_RESULT, 1 @ LINKUP_SUCCESS
 	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_1A4166
+	compare VAR_RESULT, 8 @ LINKUP_RETRY_ROLE_ASSIGN
+	goto_if_eq OldaleTown_PokemonCenter_2F_EventScript_ChooseGroupLeaderOfTwo
 	goto OldaleTown_PokemonCenter_2F_EventScript_1A4319
-
-OldaleTown_PokemonCenter_2F_EventScript_WirelessActivityUnsupported:: @ new
-	message OldaleTown_PokemonCenter_2F_Text_WirelessActivityUnsupported
-	waitmessage
-	waitbuttonpress
-	goto OldaleTown_PokemonCenter_2F_EventScript_1A4319
-	end
-
-OldaleTown_PokemonCenter_2F_EventScript_WirelessNotConnected:: @ new
-	message OldaleTown_PokemonCenter_2F_Text_WirelessNotConnected
-	waitmessage
-	waitbuttonpress
-	goto OldaleTown_PokemonCenter_2F_EventScript_1A4319
-	end
 
 OldaleTown_PokemonCenter_2F_EventScript_1A4325:: @ 81A4325
 	special SetCableClubWarp

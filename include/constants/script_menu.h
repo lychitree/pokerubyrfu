@@ -9,6 +9,7 @@
 
 // Multichoice Ids
 // TODO
+#define MULTI_LINK_LEADER 73
 
 // Std String Ids
 #define STDSTRING_COOL             0

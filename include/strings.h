@@ -542,6 +542,8 @@ extern const u8 OtherText_SawIt[];
 extern const u8 OtherText_NotYet[];
 extern const u8 OtherText_Yes[];
 extern const u8 OtherText_No[];
+extern const u8 OtherText_JoinGroup[];
+extern const u8 OtherText_BecomeLeader[];
 extern const u8 OtherText_Info2[];
 extern const u8 OtherText_SingleBattle[];
 extern const u8 OtherText_DoubleBattle[];

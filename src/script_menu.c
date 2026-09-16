@@ -473,6 +473,15 @@ const struct MenuAction MultichoiceList_01[] =
     {gOtherText_CancelNoTerminator, NULL},
 };
 
+// Matches retail Emerald's MultichoiceList_LinkLeader (src/data/script_menu.h),
+// used by the wireless cable-club trade role-select prompt.
+const struct MenuAction MultichoiceList_73[] =
+{
+    {OtherText_JoinGroup, NULL},
+    {OtherText_BecomeLeader, NULL},
+    {gOtherText_CancelNoTerminator, NULL},
+};
+
 struct MultichoiceListStruct
 {
     const struct MenuAction *list;
@@ -554,6 +563,7 @@ const struct MultichoiceListStruct gMultichoiceLists[] =
     {MultichoiceList_70, ARRAY_COUNT(MultichoiceList_70)},
     {MultichoiceList_71, ARRAY_COUNT(MultichoiceList_71)},
     {MultichoiceList_72, ARRAY_COUNT(MultichoiceList_72)},
+    {MultichoiceList_73, ARRAY_COUNT(MultichoiceList_73)},
 };
 
 const u8 *const gStdStrings[] =

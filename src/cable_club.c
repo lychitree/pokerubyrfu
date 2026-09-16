@@ -108,10 +108,46 @@ u8 debug_sub_808A4D0(TaskFunc func)
     return 0;
 }
 
+// Temporary, human-readable supplement to the PrintHex overlay below --
+// that overlay uses a custom debug tile font (PrintHex writes straight into
+// a dedicated debug tilemap via gLinkTestBGInfo, not the normal text
+// system) that turned out to be unreadable in a hardware photo, making it
+// impossible to tell from a screenshot whether the two consoles ever see
+// each other at the SIO hardware level or connect but fail some later
+// check. This draws over the top-left corner of that overlay with plain
+// decimal numbers via the normal message-box font instead. Remove once the
+// wired-link investigation is done -- this is not meant to ship.
+static const u8 sDebugText_Players[] = _("Players:");
+static const u8 sDebugText_LinkErr[] = _("LinkErr:");
+static const u8 sDebugText_Result[] = _("Result:");
+static const u8 sDebugText_State[] = _("State:");
+
+static void DebugPrintReadableLinkStatus(u8 taskId)
+{
+    u8 buf[4];
+
+    Menu_DrawStdWindowFrame(0, 0, 13, 8);
+    Menu_PrintText(sDebugText_Players, 1, 1);
+    ConvertIntToDecimalStringN(buf, GetLinkPlayerCount_2(), STR_CONV_MODE_LEFT_ALIGN, 1);
+    Menu_PrintText(buf, 11, 1);
+
+    Menu_PrintText(sDebugText_LinkErr, 1, 2);
+    ConvertIntToDecimalStringN(buf, HasLinkErrorOccurred(), STR_CONV_MODE_LEFT_ALIGN, 1);
+    Menu_PrintText(buf, 11, 2);
+
+    Menu_PrintText(sDebugText_Result, 1, 3);
+    ConvertIntToDecimalStringN(buf, gSpecialVar_Result, STR_CONV_MODE_LEFT_ALIGN, 2);
+    Menu_PrintText(buf, 10, 3);
+
+    Menu_PrintText(sDebugText_State, 1, 4);
+    ConvertIntToDecimalStringN(buf, debug_sub_808A4D0(gTasks[gTasks[taskId].data[0]].func), STR_CONV_MODE_LEFT_ALIGN, 2);
+    Menu_PrintText(buf, 10, 4);
+}
+
 void debug_sub_808A55C(u8 taskId)
 {
     s32 i;
-    
+
     if (!gTasks[gTasks[taskId].data[0]].isActive)
     {
         if (gTasks[taskId].data[1] == 5)
@@ -119,6 +155,7 @@ void debug_sub_808A55C(u8 taskId)
         gTasks[taskId].data[1]++;
     }
 
+    DebugPrintReadableLinkStatus(taskId);
     PrintHex(gShouldAdvanceLinkState, 2, 0, 2);
     PrintHex((u8)gBlockSendBuffer[0], 22, 5, 4);
     for (i = 0; i < 4; i++)

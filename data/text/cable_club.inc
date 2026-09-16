@@ -175,14 +175,30 @@ OldaleTown_PokemonCenter_2F_Text_1A4E50:: @ 81A4E50
 OldaleTown_PokemonCenter_2F_Text_1A4E79:: @ 81A4E79
 	.string "I hope to see you again!$"
 
-OldaleTown_PokemonCenter_2F_Text_WirelessNotConnected::
-	.string "The Wireless Adapter is not\n"
-	.string "connected!$"
+OldaleTown_PokemonCenter_2F_Text_ChooseGroupLeaderOfTwo::
+	.string "Please decide which of you two\n"
+	.string "will become the LEADER.\p"
+	.string "The other player must then choose\n"
+	.string "“JOIN GROUP.”$"
 
-OldaleTown_PokemonCenter_2F_Text_AreYouLeader::
-	.string "Will you be the group leader?\p"
-	.string "(One of you leads, the other joins.)$"
+@ Shown the instant a role is picked, before the connection task runs, so the
+@ player sees a screen change immediately -- matching retail's own "awaiting
+@ communication" screen (union_room.c's sText_AwaitingCommunication). Without
+@ this our driver ran with zero UI feedback: the prior "please decide who
+@ leads" box just sat there for as long as the connect task took, which read
+@ as a hang even when the state machine was progressing normally underneath.
+OldaleTown_PokemonCenter_2F_Text_AwaitingCommunication::
+	.string "POKéMON TRADES! Awaiting\n"
+	.string "communication from another player.$"
 
-OldaleTown_PokemonCenter_2F_Text_WirelessActivityUnsupported::
-	.string "Only trading is available over the\n"
-	.string "Wireless Adapter right now.$"
+@ Retail's child-side text (pokeemerald src/data/union_room.h's
+@ sText_ChooseTrainerToTradeWith, keyed by LINK_GROUP_TRADE in
+@ sChooseTrainerTexts) -- shown to the JOIN GROUP side while it lists
+@ discovered leaders, distinct from the leader-side "awaiting communication"
+@ text above. Our driver doesn't yet render the actual leader list (that
+@ needs the windowing/list-menu machinery retail's Task_TryJoinLinkGroup
+@ uses, not yet ported -- see CLAUDE.md); this at least shows the correct,
+@ distinct text for the role instead of reusing the leader's message.
+OldaleTown_PokemonCenter_2F_Text_ChooseTrainerToTradeWith::
+	.string "Please choose the TRAINER to\n"
+	.string "trade with.$"
